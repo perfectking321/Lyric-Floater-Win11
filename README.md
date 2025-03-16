@@ -6,7 +6,6 @@ Lyric-Floater Screenshot
 
 ## Features
 
-- **Real-time Lyrics Display**: Automatically fetches and displays lyrics for currently playing Spotify tracks
 - **Always-on-Top Window**: Lyrics float above other applications for easy reference while multitasking
 - **Customizable Appearance**: Adjust font, size, colors, and opacity to match your desktop theme
 - **System Tray Integration**: Minimize to system tray for discreet operation
