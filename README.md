@@ -1,9 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
-
-# 
-
----
-
 # Lyric-Floater Win11
 
 A floating lyrics display application that integrates with Spotify to show real-time lyrics while you multitask.
@@ -89,5 +83,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 <div style="text-align: center">⁂</div>
 
-[^1]: https://pplx-res.cloudinary.com/image/upload/v1742135853/user_uploads/SIaFrdzVHWcQDLK/image.jpg
 
