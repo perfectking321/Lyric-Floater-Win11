@@ -4,15 +4,11 @@ import time
 import webbrowser
 import os
 import base64
-import threading
-import tkinter as tk
-from tkinter import simpledialog
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qs, urlparse
+from config import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
 
 class SpotifyClient:
     def __init__(self):
-        # Load credentials from config
-        from config import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
         self.client_id = SPOTIFY_CLIENT_ID
         self.client_secret = SPOTIFY_CLIENT_SECRET
         self.redirect_uri = "http://127.0.0.1:8888/callback"
@@ -28,8 +24,7 @@ class SpotifyClient:
             if self.refresh_token:
                 self.refresh_access_token()
             else:
-                # Start authentication in a separate thread to avoid blocking the GUI
-                threading.Thread(target=self.get_auth_token, daemon=True).start()
+                self.get_auth_token()
     
     def load_tokens(self):
         try:
@@ -54,21 +49,16 @@ class SpotifyClient:
         except Exception as e:
             print(f"Error saving tokens: {e}")
     
-    def get_auth_url():
-        client_id = "912a26cedade4d53bd1b45694dc0a789"  # Replace with your actual client ID
-        redirect_uri = "http%3A%2F%2F127.0.0.1%3A8888%2Fcallback"
-        scope = "user-read-currently-playing+user-read-playback-state"
-        
-        auth_url = f"https://accounts.spotify.com/authorize?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope={scope}"
-        return auth_url
-
+    def get_auth_token(self):
+        # Spotify authorization URL
+        auth_url = "https://accounts.spotify.com/authorize"
         
         # Parameters for the auth request
         params = {
             "client_id": self.client_id,
             "response_type": "code",
             "redirect_uri": self.redirect_uri,
-            "scope": "user-read-currently-playing user-read-playback-state",
+            "scope": "user-read-currently-playing user-read-playback-state user-modify-playback-state",
             "show_dialog": True  # Force login dialog
         }
         
@@ -79,23 +69,14 @@ class SpotifyClient:
         print(f"Please visit this URL to authorize the application: {auth_url}")
         webbrowser.open(auth_url)
         
-        # Use a dialog to get the redirect URL instead of terminal input
-        root = tk.Tk()
-        root.withdraw()  # Hide the main window
-        redirect_url = simpledialog.askstring("Spotify Authentication", 
-                                             "Please login in the browser window that opened.\n\n"
-                                             "After authorizing, copy the FULL URL you were redirected to and paste it here:")
+        # Get the auth code from the redirect URL
+        redirect_url = input("Enter the full redirect URL you were sent to: ")
         
-        if not redirect_url:
-            print("Authentication cancelled by user")
-            return
-        
-        # Extract the code from the URL
+        # Extract the code from the URL - Fixed to handle different URL formats
         try:
-            if "?code=" in redirect_url:
+            # Try to parse the URL and extract the code parameter
+            if "?" in redirect_url:
                 code = redirect_url.split("?code=")[1].split("&")[0]
-            elif "code=" in redirect_url:
-                code = redirect_url.split("code=")[1].split("&")[0]
             else:
                 print("Invalid redirect URL. Please make sure you copy the entire URL.")
                 return
@@ -182,7 +163,7 @@ class SpotifyClient:
         else:
             print(f"Error refreshing token: {response.status_code} {response.text}")
             # If refresh fails, get a new auth token
-            threading.Thread(target=self.get_auth_token, daemon=True).start()
+            self.get_auth_token()
     
     def get_current_track(self):
         """
@@ -193,11 +174,6 @@ class SpotifyClient:
             # Check if token is expired
             if time.time() > self.token_expiry:
                 self.refresh_access_token()
-            
-            # If we don't have a token yet, return None
-            if not self.auth_token:
-                print("No authentication token available")
-                return None
             
             # Make the request to Spotify API
             response = requests.get(
@@ -210,6 +186,7 @@ class SpotifyClient:
             # Handle different response codes
             if response.status_code == 204:
                 # No content - no track playing
+                print("No track currently playing")
                 return None
             elif response.status_code != 200:
                 print(f"Error getting current track: {response.status_code} {response.text}")
@@ -220,6 +197,7 @@ class SpotifyClient:
             
             # Check if a track is currently playing
             if not data or not data.get("is_playing", False) or not data.get("item"):
+                print("No track currently playing or track data missing")
                 return None
             
             # Extract the track information
@@ -231,10 +209,127 @@ class SpotifyClient:
                 "name": track["name"],
                 "artists": track["artists"],
                 "duration_ms": track.get("duration_ms", 0),
-                "album": track.get("album", {}).get("name", ""),
+                "album": track.get("album", {}),
                 "progress_ms": data.get("progress_ms", 0)
             }
             
         except Exception as e:
             print(f"Error in get_current_track: {e}")
             return None
+    
+    def get_playback_state(self):
+        """
+        Get the current playback state from Spotify.
+        Returns a dictionary with playback information or None if no track is playing.
+        """
+        try:
+            # Check if token is expired
+            if time.time() > self.token_expiry:
+                self.refresh_access_token()
+            
+            # Make the request to Spotify API
+            response = requests.get(
+                "https://api.spotify.com/v1/me/player",
+                headers={
+                    "Authorization": f"Bearer {self.auth_token}"
+                }
+            )
+            
+            # Handle different response codes
+            if response.status_code == 204:
+                # No content - no track playing
+                return None
+            elif response.status_code != 200:
+                print(f"Error getting playback state: {response.status_code} {response.text}")
+                return None
+            
+            # Parse and return the response
+            return response.json()
+            
+        except Exception as e:
+            print(f"Error in get_playback_state: {e}")
+            return None
+    
+    def start_playback(self):
+        """Start or resume playback."""
+        try:
+            # Check if token is expired
+            if time.time() > self.token_expiry:
+                self.refresh_access_token()
+            
+            # Make the request to Spotify API
+            response = requests.put(
+                "https://api.spotify.com/v1/me/player/play",
+                headers={
+                    "Authorization": f"Bearer {self.auth_token}"
+                }
+            )
+            
+            if response.status_code not in [204, 202]:
+                print(f"Error starting playback: {response.status_code} {response.text}")
+                
+        except Exception as e:
+            print(f"Error in start_playback: {e}")
+    
+    def pause_playback(self):
+        """Pause playback."""
+        try:
+            # Check if token is expired
+            if time.time() > self.token_expiry:
+                self.refresh_access_token()
+            
+            # Make the request to Spotify API
+            response = requests.put(
+                "https://api.spotify.com/v1/me/player/pause",
+                headers={
+                    "Authorization": f"Bearer {self.auth_token}"
+                }
+            )
+            
+            if response.status_code not in [204, 202]:
+                print(f"Error pausing playback: {response.status_code} {response.text}")
+                
+        except Exception as e:
+            print(f"Error in pause_playback: {e}")
+    
+    def next_track(self):
+        """Skip to next track."""
+        try:
+            # Check if token is expired
+            if time.time() > self.token_expiry:
+                self.refresh_access_token()
+            
+            # Make the request to Spotify API
+            response = requests.post(
+                "https://api.spotify.com/v1/me/player/next",
+                headers={
+                    "Authorization": f"Bearer {self.auth_token}"
+                }
+            )
+            
+            if response.status_code not in [204, 202]:
+                print(f"Error skipping to next track: {response.status_code} {response.text}")
+                
+        except Exception as e:
+            print(f"Error in next_track: {e}")
+    
+    def previous_track(self):
+        """Skip to previous track."""
+        try:
+            # Check if token is expired
+            if time.time() > self.token_expiry:
+                self.refresh_access_token()
+            
+            # Make the request to Spotify API
+            response = requests.post(
+                "https://api.spotify.com/v1/me/player/previous",
+                headers={
+                    "Authorization": f"Bearer {self.auth_token}"
+                }
+            )
+            
+            if response.status_code not in [204, 202]:
+                print(f"Error skipping to previous track: {response.status_code} {response.text}")
+                
+        except Exception as e:
+            print(f"Error in previous_track: {e}")
