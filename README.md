@@ -163,9 +163,6 @@ except APIError as e:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -185,17 +182,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Lyrics editing capability
 - [ ] Export/share functionality
 
-## 💬 Support
-
-- 📫 For bugs and features, open an [issue](https://github.com/yourusername/spotify-lyrics-viewer/issues)
-- 💡 For questions, start a [discussion](https://github.com/yourusername/spotify-lyrics-viewer/discussions)
-- 📱 For updates, follow [@yourusername](https://twitter.com/yourusername)
 
 ---
 
 <div align="center">
   
-Made with ❤️ by [Your Name]
+Made with ❤️ by [perfectkings321]
 
 ⭐ Star this repository if you find it helpful!
 
