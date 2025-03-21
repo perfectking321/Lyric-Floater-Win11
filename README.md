@@ -19,7 +19,6 @@
 
 | Feature | Description |
 |---------|-------------|
-| 🎵 Real-time Sync | Lyrics automatically sync with your Spotify playback |
 | ✨ Visual Effects | Smooth glowing animations for current lyrics |
 | 🎨 Modern UI | Spotify-inspired dark theme interface |
 | 🖼️ Rich Media | Album art display and song information |
