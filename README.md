@@ -187,7 +187,7 @@ except APIError as e:
 
 <div align="center">
   
-Made with ❤️ by [perfectkings321]
+Made with ❤️ by [perfectking321]
 
 ⭐ Star this repository if you find it helpful!
 
