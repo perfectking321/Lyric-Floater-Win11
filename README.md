@@ -1,4 +1,4 @@
-# 🎵 Spotify Lyrics Viewer
+# 🎵 Lyrics Floater Viewer
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Spotify](https://img.shields.io/badge/Spotify-Premium-1DB954.svg)](https://www.spotify.com/premium/)
