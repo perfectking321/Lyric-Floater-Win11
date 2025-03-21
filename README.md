@@ -8,7 +8,7 @@
 <div align="center">
   <img src="demo.gif" alt="Spotify Lyrics Viewer Demo" width="800"/>
   
-  *A modern, real-time lyrics viewer for Spotify with beautiful visual effects*
+  *Lyric-floater: A transparent, adjustable mini-screen that displays lyrics for your Spotify songs while you work. Keep it floating beside your tasks and never miss a word while singing along. Perfect for multitaskers who want to nail every lyric without switching windows. *
 </div>
 
 ---
