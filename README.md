@@ -1,85 +1,203 @@
-# Lyric-Floater Win11
+# 🎵 Spotify Lyrics Viewer
 
-A floating lyrics display application that integrates with Spotify to show real-time lyrics while you multitask.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Spotify](https://img.shields.io/badge/Spotify-Premium-1DB954.svg)](https://www.spotify.com/premium/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Lyric-Floater Screenshot
+<div align="center">
+  <img src="demo.gif" alt="Spotify Lyrics Viewer Demo" width="800"/>
+  
+  *A modern, real-time lyrics viewer for Spotify with beautiful visual effects*
+</div>
 
-## Features
+---
 
-- **Always-on-Top Window**: Lyrics float above other applications for easy reference while multitasking
-- **Customizable Appearance**: Adjust font, size, colors, and opacity to match your desktop theme
-- **System Tray Integration**: Minimize to system tray for discreet operation
-- **Manual Search**: Look up lyrics for any song even without Spotify playing
-- **Offline Mode**: Cached lyrics for previously viewed songs
+## ✨ Features
 
+<div align="center">
 
-## Requirements
+| Feature | Description |
+|---------|-------------|
+| 🎵 Real-time Sync | Lyrics automatically sync with your Spotify playback |
+| ✨ Visual Effects | Smooth glowing animations for current lyrics |
+| 🎨 Modern UI | Spotify-inspired dark theme interface |
+| 🖼️ Rich Media | Album art display and song information |
+| ⏯️ Controls | Integrated playback controls |
+| 📊 Progress | Real-time progress bar with timestamps |
+| 🔄 Auto-Update | Automatic lyrics fetching and updating |
+| 🪟 Window Management | Minimize, maximize, and always-on-top options |
 
-- Python 3.7+
-- Spotify Developer Account (for API credentials)
-- Genius Developer Account (for lyrics API credentials)
-- Windows 11 (optimized for this OS)
+</div>
 
+## 🚀 Quick Start
 
-## Installation
+### Prerequisites
 
-1. Clone this repository:
+- Python 3.8 or higher
+- Spotify Premium account
+- Genius API token
+
+### 📥 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/spotify-lyrics-viewer.git
+   cd spotify-lyrics-viewer
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure API credentials**
+   
+   Create `config.json` in the root directory:
+   ```json
+   {
+       "SPOTIFY_CLIENT_ID": "your_spotify_client_id",
+       "SPOTIFY_CLIENT_SECRET": "your_spotify_client_secret",
+       "GENIUS_ACCESS_TOKEN": "your_genius_api_token"
+   }
+   ```
+
+### 🎮 Usage
+
+1. **Start the application**
+   ```bash
+   python main.py
+   ```
+2. **Log in to Spotify** when prompted
+3. **Play any song** and watch the magic happen!
+
+## 🛠️ Technical Implementation
+
+### Core Components
+
+<details>
+<summary><b>🎵 Spotify Integration</b></summary>
+
+```python
+# spotify_controller.py
+class SpotifyController:
+    def __init__(self):
+        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(...))
+        
+    def get_current_track(self):
+        return self.sp.current_playback()
+```
+</details>
+
+<details>
+<summary><b>📝 Lyrics Engine</b></summary>
+
+```python
+# lyrics_fetcher.py
+class GeniusLyricsFetcher:
+    def fetch_lyrics(self, artist, title):
+        lyrics = self.genius.search_song(title, artist)
+        return self.parse_lyrics_with_timing(lyrics.lyrics)
+```
+</details>
+
+<details>
+<summary><b>✨ Glow Effect</b></summary>
+
+```python
+# lyrics_window.py
+def update_glow_effect(self, line_start, line_end):
+    # Create smooth color transition
+    for i in range(10):
+        alpha = (10 - i) / 10
+        color = self.interpolate_color('#7CB7EB', '#FFFFFF', alpha)
+        self.lyrics_text.tag_configure(f"glow_{i}", 
+                                     foreground=color,
+                                     font=(FONT_FAMILY, FONT_SIZE + 4, "bold"))
+```
+</details>
+
+## 📚 Project Structure
 
 ```
-git clone https://github.com/yourusername/lyric-floater.git
-cd lyric-floater
+spotify-lyrics-viewer/
+├── main.py                 # Application entry point
+├── config.json            # Configuration file
+├── requirements.txt       # Dependencies
+├── src/
+│   ├── controllers/
+│   │   ├── spotify_controller.py
+│   │   └── lyrics_fetcher.py
+│   ├── ui/
+│   │   ├── lyrics_window.py
+│   │   └── styles.py
+│   └── utils/
+│       └── helpers.py
+└── cache/
+    └── lyrics_cache.json
 ```
 
-2. Install required dependencies:
+## 🔧 Best Practices
 
-```
-pip install -r requirements.txt
-```
-
-3. Set up API credentials:
-    - Create a Spotify Developer account at [developer.spotify.com](https://developer.spotify.com)
-    - Register a new application and get your Client ID and Client Secret
-    - Create a Genius API account at [genius.com/api-clients](https://genius.com/api-clients)
-    - Generate an API key
-4. Configure the application:
-    - Open `config.py` and enter your API credentials
-    - Or use the Settings window in the application to enter your credentials
-
-## Usage
-
-1. Run the application:
-
-```
-python main.py
+### Error Handling
+```python
+try:
+    lyrics = lyrics_fetcher.fetch_lyrics(artist, title)
+    if not lyrics:
+        display_message("No lyrics found")
+except APIError as e:
+    log_error(f"API Error: {e}")
+    display_message("Couldn't fetch lyrics")
 ```
 
-2. Authorize with Spotify when prompted
-3. Play a song on Spotify
-4. Lyrics will automatically display in the floating window
-5. Right-click on the window for additional options
-6. Minimize to system tray by clicking the minimize button
+### Performance Optimization
+- Lyrics caching system
+- Efficient update intervals
+- Minimal API calls
+- Resource cleanup
 
-## Troubleshooting
+## 🤝 Contributing
 
-- **System Tray Icon Not Visible**: Check Windows 11 notification settings to ensure icons are set to "always show"
-- **Missing Lyrics**: Some songs may not have lyrics available in the Genius database
-- **Authentication Issues**: Ensure your Spotify Client ID is correctly entered in the settings
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
+## 📝 License
 
-## Contributing
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - [Spotify Web API](https://developer.spotify.com/documentation/web-api/)
 - [Genius API](https://docs.genius.com/)
-- [pystray](https://github.com/moses-palmer/pystray)
+- [Python Tkinter](https://docs.python.org/3/library/tkinter.html)
+- [Spotipy](https://spotipy.readthedocs.io/)
 
-<div style="text-align: center">⁂</div>
+## 🔮 Future Roadmap
 
+- [ ] Multiple lyrics sources integration
+- [ ] Customizable themes and animations
+- [ ] Offline mode with cached lyrics
+- [ ] Multi-language support
+- [ ] Karaoke mode with timing markers
+- [ ] User preferences panel
+- [ ] Lyrics editing capability
+- [ ] Export/share functionality
 
+## 💬 Support
+
+- 📫 For bugs and features, open an [issue](https://github.com/yourusername/spotify-lyrics-viewer/issues)
+- 💡 For questions, start a [discussion](https://github.com/yourusername/spotify-lyrics-viewer/discussions)
+- 📱 For updates, follow [@yourusername](https://twitter.com/yourusername)
+
+---
+
+<div align="center">
+  
+Made with ❤️ by [Your Name]
+
+⭐ Star this repository if you find it helpful!
+
+</div> 
