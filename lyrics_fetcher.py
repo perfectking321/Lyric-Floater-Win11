@@ -247,9 +247,19 @@ class GeniusLyricsFetcher:
         
         return lyrics_text
     
+    def _sanitize_filename(self, text):
+        """Remove invalid characters from filename."""
+        # Replace invalid Windows filename characters
+        invalid_chars = '<>:"/\\|?*'
+        for char in invalid_chars:
+            text = text.replace(char, '-')
+        return text.strip()
+    
     def get_lyrics_from_cache(self, artist, title):
         """Get lyrics from cache with timing information."""
-        cache_file = os.path.join(self.cache_dir, f"{artist}_{title}.json")
+        safe_artist = self._sanitize_filename(artist)
+        safe_title = self._sanitize_filename(title)
+        cache_file = os.path.join(self.cache_dir, f"{safe_artist}_{safe_title}.json")
         try:
             if os.path.exists(cache_file):
                 with open(cache_file, 'r', encoding='utf-8') as f:
@@ -278,7 +288,9 @@ class GeniusLyricsFetcher:
     
     def save_lyrics_to_cache(self, artist, title, lyrics):
         """Save lyrics to cache with timing information."""
-        cache_file = os.path.join(self.cache_dir, f"{artist}_{title}.json")
+        safe_artist = self._sanitize_filename(artist)
+        safe_title = self._sanitize_filename(title)
+        cache_file = os.path.join(self.cache_dir, f"{safe_artist}_{safe_title}.json")
         try:
             with open(cache_file, 'w', encoding='utf-8') as f:
                 json.dump(lyrics, f, ensure_ascii=False, indent=2)

@@ -1,6 +1,0 @@
-spotipy
-requests
-Pillow
-beautifulsoup4
-lyricsgenius
-python-dotenv
