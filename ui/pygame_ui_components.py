@@ -253,3 +253,105 @@ class AlbumArt:
         """Draw album art"""
         if self.image:
             surface.blit(self.image, (self.x, self.y))
+
+
+class OpacitySlider:
+    """Vertical slider for opacity control (0.3 to 1.0)"""
+    
+    def __init__(self, x: int, y: int, width: int, height: int, 
+                 initial_value: float = 0.95,
+                 on_change: Optional[Callable[[float], None]] = None):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.on_change = on_change
+        
+        # Range: 0.3 (30%) to 1.0 (100%)
+        self.min_value = 0.3
+        self.max_value = 1.0
+        self.value = max(self.min_value, min(self.max_value, initial_value))
+        
+        # Colors
+        self.bg_color = self._hex_to_rgb(PROGRESS_BG)
+        self.fg_color = self._hex_to_rgb(PROGRESS_COLOR)
+        self.handle_color = (255, 255, 255)
+        
+        # State
+        self.is_dragging = False
+        self.is_hovered = False
+        
+        # Handle (small circle that moves)
+        self.handle_radius = 8
+    
+    def _hex_to_rgb(self, hex_color: str):
+        hex_color = hex_color.lstrip('#')
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    
+    def _value_to_y(self, value: float) -> int:
+        """Convert value to y position"""
+        # Top = 1.0, Bottom = 0.3 (inverted for intuitive control)
+        normalized = (value - self.min_value) / (self.max_value - self.min_value)
+        return self.rect.y + int((1.0 - normalized) * self.rect.height)
+    
+    def _y_to_value(self, y: int) -> float:
+        """Convert y position to value"""
+        # Top = 1.0, Bottom = 0.3
+        y_offset = y - self.rect.y
+        normalized = 1.0 - (y_offset / self.rect.height)
+        value = self.min_value + normalized * (self.max_value - self.min_value)
+        return max(self.min_value, min(self.max_value, value))
+    
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        """Handle mouse events"""
+        if event.type == pygame.MOUSEMOTION:
+            handle_y = self._value_to_y(self.value)
+            handle_rect = pygame.Rect(self.rect.x - 5, handle_y - self.handle_radius,
+                                    self.rect.width + 10, self.handle_radius * 2)
+            self.is_hovered = handle_rect.collidepoint(event.pos) or self.rect.collidepoint(event.pos)
+            
+            if self.is_dragging:
+                self.value = self._y_to_value(event.pos[1])
+                if self.on_change:
+                    self.on_change(self.value)
+                return True
+        
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1 and self.is_hovered:
+                self.is_dragging = True
+                self.value = self._y_to_value(event.pos[1])
+                if self.on_change:
+                    self.on_change(self.value)
+                return True
+        
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                was_dragging = self.is_dragging
+                self.is_dragging = False
+                return was_dragging
+        
+        return False
+    
+    def set_value(self, value: float):
+        """Set slider value (0.3 to 1.0)"""
+        if not self.is_dragging:
+            self.value = max(self.min_value, min(self.max_value, value))
+    
+    def draw(self, surface: pygame.Surface):
+        """Draw vertical slider"""
+        # Background track
+        pygame.draw.rect(surface, self.bg_color, self.rect, border_radius=2)
+        
+        # Filled portion (from bottom to handle position)
+        handle_y = self._value_to_y(self.value)
+        filled_height = self.rect.bottom - handle_y
+        if filled_height > 0:
+            filled_rect = pygame.Rect(self.rect.x, handle_y, 
+                                    self.rect.width, filled_height)
+            pygame.draw.rect(surface, self.fg_color, filled_rect, border_radius=2)
+        
+        # Handle (circle)
+        pygame.draw.circle(surface, self.handle_color, 
+                         (self.rect.centerx, handle_y), self.handle_radius)
+        
+        # Outline for handle
+        pygame.draw.circle(surface, self.fg_color,
+                         (self.rect.centerx, handle_y), self.handle_radius, 2)
+

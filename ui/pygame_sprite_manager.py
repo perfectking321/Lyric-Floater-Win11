@@ -4,7 +4,7 @@ Pygame Lyric Sprite Manager - Manages individual lyric line sprites
 import pygame
 from typing import List, Tuple, Optional
 from ui.styles import *
-from ui.pygame_text_renderer import TextRenderer
+from ui.pygame_text_renderer import TextRenderer, TextLayout
 
 
 class LyricSprite(pygame.sprite.Sprite):
@@ -17,6 +17,7 @@ class LyricSprite(pygame.sprite.Sprite):
         self.text = text
         self.index = index
         self.renderer = renderer
+        self.text_layout = TextLayout(renderer)
         self.width = width
         
         # Position
@@ -37,18 +38,42 @@ class LyricSprite(pygame.sprite.Sprite):
         self.update_surface()
     
     def update_surface(self):
-        """Re-render the text surface"""
+        """Re-render the text surface with word wrapping"""
         color = self.renderer.get_color_for_opacity(self.opacity)
-        text_surface = self.renderer.render_text(self.text, self.font_key, color)
+        
+        # Wrap text to fit within width (leave margins on sides)
+        max_text_width = self.width - 40  # 20px margin on each side
+        wrapped_lines = self.text_layout.wrap_text(self.text, max_text_width, self.font_key)
+        
+        # Render each wrapped line
+        line_surfaces = []
+        total_height = 0
+        max_line_width = 0
+        
+        for line in wrapped_lines:
+            line_surface = self.renderer.render_text(line, self.font_key, color)
+            line_surfaces.append(line_surface)
+            total_height += line_surface.get_height()
+            max_line_width = max(max_line_width, line_surface.get_width())
+        
+        # Add spacing between wrapped lines
+        line_spacing = 5
+        total_height += line_spacing * (len(wrapped_lines) - 1) if len(wrapped_lines) > 1 else 0
         
         # Create surface with proper dimensions
-        self.image = pygame.Surface((self.width, text_surface.get_height() + 20), 
-                                    pygame.SRCALPHA)
+        # Use fixed minimum height for consistent spacing between different lyrics
+        fixed_height = max(50, total_height + 20)
+        
+        self.image = pygame.Surface((self.width, fixed_height), pygame.SRCALPHA)
         self.image.fill((0, 0, 0, 0))  # Transparent background
         
-        # Center text horizontally
-        text_x = (self.width - text_surface.get_width()) // 2
-        self.image.blit(text_surface, (text_x, 10))
+        # Draw each line centered horizontally, stacked vertically
+        current_y = (fixed_height - total_height) // 2
+        
+        for line_surface in line_surfaces:
+            text_x = (self.width - line_surface.get_width()) // 2
+            self.image.blit(line_surface, (text_x, current_y))
+            current_y += line_surface.get_height() + line_spacing
         
         # Update rect
         self.rect = self.image.get_rect()
@@ -106,7 +131,8 @@ class LyricSpriteManager:
         # Layout settings
         self.lyrics_area_y = HEADER_HEIGHT
         self.lyrics_area_height = screen_height - HEADER_HEIGHT - CONTROL_HEIGHT
-        self.line_height = int(FONT_SIZE_CURRENT * LINE_SPACING)
+        # Increase line height to prevent overlap (50px minimum for 18pt font)
+        self.line_height = max(50, int(FONT_SIZE_CURRENT * LINE_SPACING))
         
         # Current state
         self.current_index = -1

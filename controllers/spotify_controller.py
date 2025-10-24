@@ -271,4 +271,61 @@ class SpotifyController:
         self.stop_progress_updates()
         self.progress_callbacks.clear()
         self.sp = None
-        self.token_info = None 
+        self.token_info = None
+    
+    # ===== Playback Control Methods =====
+    
+    def play(self):
+        """Resume playback"""
+        try:
+            if self.sp:
+                self.sp.start_playback()
+                print("[Spotify] ▶ Playback resumed")
+                return True
+        except Exception as e:
+            print(f"[Spotify] Error resuming playback: {e}")
+        return False
+    
+    def pause(self):
+        """Pause playback"""
+        try:
+            if self.sp:
+                self.sp.pause_playback()
+                print("[Spotify] ⏸ Playback paused")
+                return True
+        except Exception as e:
+            print(f"[Spotify] Error pausing playback: {e}")
+        return False
+    
+    def next(self):
+        """Skip to next track"""
+        try:
+            if self.sp:
+                self.sp.next_track()
+                print("[Spotify] ⏭ Skipped to next track")
+                return True
+        except Exception as e:
+            print(f"[Spotify] Error skipping track: {e}")
+        return False
+    
+    def previous(self):
+        """Go to previous track"""
+        try:
+            if self.sp:
+                self.sp.previous_track()
+                print("[Spotify] ⏮ Returned to previous track")
+                return True
+        except Exception as e:
+            print(f"[Spotify] Error going to previous track: {e}")
+        return False
+    
+    def seek_to_position(self, position_ms):
+        """Seek to specific position in current track"""
+        try:
+            if self.sp:
+                self.sp.seek_track(position_ms)
+                print(f"[Spotify] ⏩ Seeked to {position_ms/1000:.1f}s")
+                return True
+        except Exception as e:
+            print(f"[Spotify] Error seeking: {e}")
+        return False 

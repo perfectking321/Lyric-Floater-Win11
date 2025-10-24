@@ -16,7 +16,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ui.styles import *
 from ui.pygame_text_renderer import TextRenderer, TextLayout
 from ui.pygame_sprite_manager import LyricSpriteManager
-from ui.pygame_ui_components import Button, ImageButton, ProgressBar, Label, AlbumArt
+from ui.pygame_ui_components import Button, ImageButton, ProgressBar, Label, AlbumArt, OpacitySlider
+
 
 
 class PygameLyricsWindow:
@@ -27,9 +28,15 @@ class PygameLyricsWindow:
         pygame.init()
         pygame.display.set_caption("Lyrics Floater - Pygame")
         
-        # Create window
+        # Create window (with RESIZABLE flag)
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), 
-                                              pygame.HWSURFACE | pygame.DOUBLEBUF)
+                                              pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE)
+        
+        # Window dimensions (for resizing)
+        self.window_width = WINDOW_WIDTH
+        self.window_height = WINDOW_HEIGHT
+        self.min_width = 400
+        self.min_height = 500
         
         # Set window to stay on top (platform-specific)
         self._set_window_on_top()
@@ -55,8 +62,16 @@ class PygameLyricsWindow:
         self.current_duration_ms = 0
         self.timed_lyrics: List[Tuple[str, int, int]] = []
         
+        # Transparency control
+        self.window_opacity = 0.95  # 95% opacity (5% transparent)
+        self.show_opacity_popup = False
+        self.opacity_slider_value = self.window_opacity
+        
         # Background color
         self.bg_color = self._hex_to_rgb(BACKGROUND_COLOR)
+        
+        # Apply initial transparency
+        self._set_window_opacity(self.window_opacity)
         
         # UI Components
         self._create_ui_components()
@@ -87,6 +102,70 @@ class PygameLyricsWindow:
             ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002)
         except:
             print("[Window] Could not set always-on-top")
+    
+    def _set_window_opacity(self, opacity: float):
+        """Set window transparency (Windows only)"""
+        try:
+            import ctypes
+            from ctypes import wintypes
+            
+            # Get window handle
+            hwnd = pygame.display.get_wm_info()['window']
+            
+            # Constants for Windows API
+            GWL_EXSTYLE = -20
+            WS_EX_LAYERED = 0x00080000
+            LWA_ALPHA = 0x00000002
+            
+            # Get current extended style
+            user32 = ctypes.windll.user32
+            ex_style = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            
+            # Add layered window style
+            user32.SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED)
+            
+            # Set alpha (0-255, where 255 is fully opaque)
+            alpha = int(opacity * 255)
+            user32.SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA)
+            
+            print(f"[Window] Opacity set to {opacity*100:.0f}%")
+        except Exception as e:
+            print(f"[Window] Could not set opacity: {e}")
+    
+    def _reposition_ui_components(self):
+        """Update UI component positions after window resize"""
+        # Get fonts
+        font_small = self.text_renderer.fonts['small']
+        font_normal = self.text_renderer.fonts['normal']
+        font_title = self.text_renderer.fonts['title']
+        
+        # Update progress bar position and width
+        progress_y = self.window_height - CONTROL_HEIGHT + 10
+        self.progress_bar.rect = pygame.Rect(20, progress_y, self.window_width - 40, 4)
+        
+        # Update time labels
+        self.time_current_label.rect.topleft = (20, progress_y + 10)
+        self.time_total_label.rect.topleft = (self.window_width - 60, progress_y + 10)
+        
+        # Update control buttons (centered)
+        control_y = progress_y + 35
+        button_center_x = self.window_width // 2
+        self.play_button.rect.center = (button_center_x, control_y + 20)
+        self.prev_button.rect.center = (button_center_x - 70, control_y + 20)
+        self.next_button.rect.center = (button_center_x + 70, control_y + 20)
+        
+        # Update transparency button (top right)
+        self.transparency_button.rect.topleft = (self.window_width - 70, 20)
+        
+        # Update opacity slider (right side)
+        popup_x = self.window_width - 90
+        self.opacity_slider.rect.x = popup_x
+        self.opacity_label.x = popup_x + 10
+        
+        # Update stats label (bottom right)
+        self.stats_label.rect.topleft = (self.window_width - 250, self.window_height - 20)
+        
+        print(f"[Window] UI components repositioned for {self.window_width}x{self.window_height}")
     
     def _create_ui_components(self):
         """Create all UI components"""
@@ -145,6 +224,25 @@ class PygameLyricsWindow:
             callback=self._on_next_clicked
         )
         
+        # Transparency button (top right corner)
+        self.transparency_button = Button(
+            WINDOW_WIDTH - 70, 20, 50, 30,
+            "◐",  # Half-circle icon for transparency
+            font_small,
+            callback=self._on_transparency_clicked
+        )
+        
+        # Opacity slider popup (hidden by default)
+        popup_x = WINDOW_WIDTH - 90
+        popup_y = 60
+        self.opacity_slider = OpacitySlider(
+            popup_x, popup_y, 20, 150,
+            initial_value=self.window_opacity,
+            on_change=self._on_opacity_changed
+        )
+        self.opacity_label = Label(popup_x - 20, popup_y + 160, "95%", 
+                                   font_small, TEXT_INFO, centered=True)
+        
         # Stats label (bottom right, hidden by default)
         self.stats_label = Label(WINDOW_WIDTH - 150, WINDOW_HEIGHT - 20, 
                                  "FPS: 60", font_small, TEXT_SECONDARY)
@@ -189,6 +287,35 @@ class PygameLyricsWindow:
             if event.type == pygame.QUIT:
                 self.running = False
             
+            elif event.type == pygame.VIDEORESIZE:
+                # Window resized - update dimensions and recreate surface
+                new_width = max(event.w, self.min_width)
+                new_height = max(event.h, self.min_height)
+                
+                print(f"[Window] Resized to {new_width}x{new_height}")
+                
+                self.window_width = new_width
+                self.window_height = new_height
+                
+                # Recreate screen surface
+                self.screen = pygame.display.set_mode(
+                    (new_width, new_height), 
+                    pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE
+                )
+                
+                # Recreate sprite manager with new dimensions
+                self.sprite_manager = LyricSpriteManager(
+                    self.text_renderer, new_width, new_height
+                )
+                
+                # Reload current lyrics if available
+                if self.timed_lyrics:
+                    lines = [item[0] for item in self.timed_lyrics]
+                    self.sprite_manager.load_lyrics(lines)
+                
+                # Update UI component positions
+                self._reposition_ui_components()
+            
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
@@ -219,6 +346,11 @@ class PygameLyricsWindow:
             self.play_button.handle_event(event)
             self.prev_button.handle_event(event)
             self.next_button.handle_event(event)
+            self.transparency_button.handle_event(event)
+            
+            # Opacity slider (only if popup is shown)
+            if self.show_opacity_popup:
+                self.opacity_slider.handle_event(event)
     
     def _update(self):
         """Update game state"""
@@ -287,6 +419,19 @@ class PygameLyricsWindow:
         self.play_button.draw(self.screen)
         self.prev_button.draw(self.screen)
         self.next_button.draw(self.screen)
+        self.transparency_button.draw(self.screen)
+        
+        # Opacity slider popup (if shown)
+        if self.show_opacity_popup:
+            # Draw semi-transparent background
+            popup_bg = pygame.Surface((110, 210), pygame.SRCALPHA)
+            popup_bg.fill((20, 20, 20, 230))
+            popup_x = self.window_width - 100
+            self.screen.blit(popup_bg, (popup_x - 10, 50))
+            
+            # Draw slider and label
+            self.opacity_slider.draw(self.screen)
+            self.opacity_label.draw(self.screen)
     
     # ===== Callbacks =====
     
@@ -345,10 +490,11 @@ class PygameLyricsWindow:
             artist = track.get('artists', [{}])[0].get('name', '')
             title = track.get('name', '')
             album = track.get('album', {}).get('name', '')
-            duration = track.get('duration_ms', 0)
+            duration_ms = track.get('duration_ms', 0)
+            duration_sec = duration_ms // 1000  # Convert milliseconds to seconds for LRClib
             
             threading.Thread(target=self._fetch_lyrics, 
-                           args=(artist, title, album, duration),
+                           args=(artist, title, album, duration_sec),
                            daemon=True).start()
     
     def _load_album_art(self, url: str):
@@ -433,6 +579,17 @@ class PygameLyricsWindow:
         if self.spotify_controller and self.current_duration_ms > 0:
             position_ms = int(progress * self.current_duration_ms)
             self.spotify_controller.seek_to_position(position_ms)
+    
+    def _on_transparency_clicked(self):
+        """Toggle opacity slider popup"""
+        self.show_opacity_popup = not self.show_opacity_popup
+        print(f"[Window] Opacity popup: {'shown' if self.show_opacity_popup else 'hidden'}")
+    
+    def _on_opacity_changed(self, value: float):
+        """Opacity slider value changed"""
+        self.window_opacity = value
+        self._set_window_opacity(value)
+        self.opacity_label.set_text(f"{int(value * 100)}%")
     
     def _format_time(self, ms: int) -> str:
         """Format milliseconds to MM:SS"""
