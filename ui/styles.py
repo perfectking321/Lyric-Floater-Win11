@@ -50,11 +50,18 @@ ANIMATION_NORMAL = 300  # Line transitions
 ANIMATION_SMOOTH = 500  # Auto-scroll
 
 # Lyrics Timing Configuration
-LYRICS_OFFSET_MS = -1500  # Delay by 1000ms (1 second) after singing
+LYRICS_OFFSET_MS = -1000  # Delay by 1000ms (1 second) after singing
 # Positive value = highlight AFTER lyrics are sung
 # Negative value = highlight BEFORE lyrics are sung (read-ahead)
 # Zero = exact timing from LRClib
 ANIMATION_FADE = 400  # Fade in/out
+
+# Performance Settings (Phase 2 Optimizations)
+VIRTUAL_SCROLLING_ENABLED = True  # Use virtual scrolling (only render visible lines)
+VISIBLE_LINES_BUFFER = 3  # Extra lines to render above/below viewport
+ANIMATION_FPS = 60  # Target FPS for animations
+BATCH_CANVAS_UPDATES = True  # Batch canvas updates for better performance
+ANIMATE_FONT_SIZE = False  # Disable font size animation for smoother performance
 
 # Layout Dimensions
 ALBUM_ART_SIZE = 80  # Circular album art
