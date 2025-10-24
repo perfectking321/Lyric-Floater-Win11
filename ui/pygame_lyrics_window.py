@@ -32,6 +32,10 @@ class PygameLyricsWindow:
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), 
                                               pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE)
         
+        # Force pygame to process the window creation
+        pygame.display.flip()
+        pygame.event.pump()
+        
         # Window dimensions (for resizing)
         self.window_width = WINDOW_WIDTH
         self.window_height = WINDOW_HEIGHT
@@ -95,14 +99,63 @@ class PygameLyricsWindow:
         return (r, g, b)
     
     def _set_window_on_top(self):
-        """Platform-specific always-on-top"""
+        """Set window to always stay on top using Windows API"""
         try:
-            # Windows
             import ctypes
-            hwnd = pygame.display.get_wm_info()['window']
-            ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002)
-        except:
-            print("[Window] Could not set always-on-top")
+            from ctypes import wintypes
+            import time
+            
+            # Small delay to ensure window is fully created
+            time.sleep(0.1)
+            
+            # Get window handle from Pygame
+            wm_info = pygame.display.get_wm_info()
+            if 'window' not in wm_info:
+                print("[Window] ⚠️ Window handle not available yet")
+                return
+                
+            hwnd = wm_info['window']
+            
+            # CRITICAL: Cast to proper HWND type for 64-bit compatibility
+            hwnd = ctypes.c_void_p(hwnd)
+            
+            # Windows API constants
+            HWND_TOPMOST = ctypes.c_void_p(-1)  # Use c_void_p for HWND
+            SWP_NOMOVE = 0x0002
+            SWP_NOSIZE = 0x0001
+            SWP_SHOWWINDOW = 0x0040
+            
+            # Define SetWindowPos with proper argument types
+            user32 = ctypes.windll.user32
+            user32.SetWindowPos.argtypes = [
+                wintypes.HWND,    # hWnd
+                wintypes.HWND,    # hWndInsertAfter
+                ctypes.c_int,     # X
+                ctypes.c_int,     # Y
+                ctypes.c_int,     # cx
+                ctypes.c_int,     # cy
+                wintypes.UINT     # uFlags
+            ]
+            user32.SetWindowPos.restype = wintypes.BOOL
+            
+            # SetWindowPos: Make window always on top
+            result = user32.SetWindowPos(
+                hwnd, 
+                HWND_TOPMOST,
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
+            )
+            
+            if result:
+                print("[Window] ✅ Always on Top enabled")
+            else:
+                error_code = ctypes.windll.kernel32.GetLastError()
+                print(f"[Window] ⚠️ SetWindowPos failed (Error: {error_code})")
+                
+        except Exception as e:
+            print(f"[Window] ❌ Could not set always-on-top: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _set_window_opacity(self, opacity: float):
         """Set window transparency (Windows only)"""
@@ -303,6 +356,9 @@ class PygameLyricsWindow:
                     (new_width, new_height), 
                     pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE
                 )
+                
+                # Re-apply Always on Top (pygame.display.set_mode resets window flags)
+                self._set_window_on_top()
                 
                 # Recreate sprite manager with new dimensions
                 self.sprite_manager = LyricSpriteManager(

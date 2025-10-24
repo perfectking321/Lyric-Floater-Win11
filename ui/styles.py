@@ -50,7 +50,7 @@ ANIMATION_NORMAL = 300  # Line transitions
 ANIMATION_SMOOTH = 500  # Auto-scroll
 
 # Lyrics Timing Configuration
-LYRICS_OFFSET_MS = -1500  # Delay by 1000ms (1 second) after singing
+LYRICS_OFFSET_MS = -500  # Delay by 1000ms (1 second) after singing
 # Positive value = highlight AFTER lyrics are sung
 # Negative value = highlight BEFORE lyrics are sung (read-ahead)
 # Zero = exact timing from LRClib
