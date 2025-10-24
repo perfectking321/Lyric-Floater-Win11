@@ -1,0 +1,7 @@
+# Pygame Requirements for Option C Implementation
+pygame>=2.5.0
+pygame-gui>=0.6.0
+pillow>=10.0.0
+spotipy>=2.23.0
+requests>=2.31.0
+lyricsgenius>=3.0.1

@@ -15,12 +15,6 @@ from ui.icon import get_icon
 from utils.animations import AnimationEngine, interpolate_color, calculate_opacity_for_line
 from utils.image_processing import create_circular_image, download_image, create_placeholder_image
 
-# NEW: Import optimization components
-from ui.animation_manager import AnimationManager, MultiPropertyAnimation, Easing
-from ui.virtual_scroller import VirtualScroller
-from ui.color_cache import ColorCache
-from ui.canvas_batcher import SmartCanvasBatcher
-
 
 class ModernLyricsWindow:
     """Modern Apple Music-inspired lyrics display window"""
@@ -30,14 +24,8 @@ class ModernLyricsWindow:
         self.spotify_controller = None
         self.lyrics_fetcher = None
         
-        # Animation system (OLD - keep for compatibility)
+        # Animation system
         self.animation_engine = AnimationEngine(root)
-        
-        # NEW: Optimization components
-        self.animation_manager = AnimationManager(root, fps=60)
-        self.color_cache = ColorCache()
-        self.canvas_batcher = None  # Will be initialized after canvas creation
-        self.virtual_scroller = None  # Will be initialized after canvas creation
         
         # Lyrics data
         self.lyric_lines = []  # List of dicts: {text, canvas_id, y_pos, index, opacity}
@@ -242,20 +230,6 @@ class ModernLyricsWindow:
             bd=0
         )
         self.lyrics_canvas.pack(fill='both', expand=True, padx=LYRICS_PADDING)
-        
-        # NEW: Initialize optimization components after canvas creation
-        self.canvas_batcher = SmartCanvasBatcher(self.lyrics_canvas, batch_size=50)
-        self.virtual_scroller = VirtualScroller(
-            canvas=self.lyrics_canvas,
-            window_width=WINDOW_WIDTH - (LYRICS_PADDING * 2),
-            window_height=600,  # Approximate lyrics area height
-            line_height=int(FONT_SIZE * LINE_SPACING),
-            buffer_lines=3
-        )
-        
-        # Start animation manager
-        self.animation_manager.start()
-        print("[Optimization] Animation manager, color cache, virtual scroller, and canvas batcher initialized")
         
         # Bind mouse wheel for scrolling
         self.lyrics_canvas.bind('<MouseWheel>', self._on_mouse_wheel)
@@ -719,73 +693,45 @@ class ModernLyricsWindow:
         return result
     
     def _render_lyrics(self, lines):
-        """Render lyrics lines using virtual scroller (OPTIMIZED)"""
-        print(f"[Optimization] Rendering {len(lines)} lines with virtual scroller")
+        """Render lyrics lines on canvas"""
+        canvas_width = self.lyrics_canvas.winfo_width()
+        if canvas_width <= 1:
+            canvas_width = WINDOW_WIDTH - (LYRICS_PADDING * 2)
         
-        # Clear old lyrics
-        self.lyric_lines.clear()
+        y_position = 100  # Start position
+        line_spacing = int(FONT_SIZE * LINE_SPACING)
         
-        # Use virtual scroller to render only visible lines
-        if self.virtual_scroller:
-            self.virtual_scroller.set_lyrics(lines)
+        for i, line_text in enumerate(lines):
+            # Start all lines with very low opacity (will be updated immediately)
+            opacity = 0.1  # Very dim initially
+            color = self._opacity_to_color(TEXT_MUTED, opacity)
             
-            # Get stats
-            stats = self.virtual_scroller.get_stats()
-            print(f"[Optimization] Virtual scroller: {stats['visible_lines']}/{stats['total_lines']} lines rendered ({stats['reduction_percent']}% reduction)")
+            # Create text on canvas
+            canvas_id = self.lyrics_canvas.create_text(
+                canvas_width // 2,
+                y_position,
+                text=line_text,
+                font=(FONT_FAMILY, FONT_SIZE),
+                fill=color,
+                width=canvas_width - 40,
+                justify='center',
+                anchor='center'
+            )
             
-            # Store line data for compatibility with existing code
-            for i, line_text in enumerate(lines):
-                self.lyric_lines.append({
-                    'text': line_text,
-                    'canvas_id': None,  # Will be managed by virtual scroller
-                    'y_pos': i * self.virtual_scroller.line_height,
-                    'index': i,
-                    'opacity': 0.4
-                })
+            # Store line data
+            self.lyric_lines.append({
+                'text': line_text,
+                'canvas_id': canvas_id,
+                'y_pos': y_position,
+                'index': i,
+                'opacity': opacity
+            })
             
-            # Update total height
-            self.total_lyrics_height = self.virtual_scroller.total_content_height
-            canvas_width = self.lyrics_canvas.winfo_width()
-            if canvas_width <= 1:
-                canvas_width = WINDOW_WIDTH - (LYRICS_PADDING * 2)
-            self.lyrics_canvas.configure(scrollregion=(0, 0, canvas_width, self.total_lyrics_height))
-        else:
-            # Fallback to old rendering if virtual scroller not initialized
-            print("[Warning] Virtual scroller not initialized, using fallback rendering")
-            canvas_width = self.lyrics_canvas.winfo_width()
-            if canvas_width <= 1:
-                canvas_width = WINDOW_WIDTH - (LYRICS_PADDING * 2)
-            
-            y_position = 100
-            line_spacing = int(FONT_SIZE * LINE_SPACING)
-            
-            for i, line_text in enumerate(lines):
-                opacity = 0.1
-                color = self._opacity_to_color(TEXT_MUTED, opacity)
-                
-                canvas_id = self.lyrics_canvas.create_text(
-                    canvas_width // 2,
-                    y_position,
-                    text=line_text,
-                    font=(FONT_FAMILY, FONT_SIZE),
-                    fill=color,
-                    width=canvas_width - 40,
-                    justify='center',
-                    anchor='center'
-                )
-                
-                self.lyric_lines.append({
-                    'text': line_text,
-                    'canvas_id': canvas_id,
-                    'y_pos': y_position,
-                    'index': i,
-                    'opacity': opacity
-                })
-                
-                y_position += line_spacing
-            
-            self.total_lyrics_height = y_position + 100
-            self.lyrics_canvas.configure(scrollregion=(0, 0, canvas_width, self.total_lyrics_height))
+            y_position += line_spacing
+        
+        # Update total height and configure scroll region
+        self.total_lyrics_height = y_position + 100
+        self.lyrics_canvas.configure(scrollregion=(0, 0, canvas_width, self.total_lyrics_height))
         
         # Immediately update highlighting based on current playback position
         if self.timed_lyrics and self.spotify_controller and self.current_progress_ms > 0:
@@ -796,35 +742,36 @@ class ModernLyricsWindow:
                 print(f"Initial highlight at line {current_index}")
                 self.highlight_current_line(current_index)
         else:
+            # If no timing yet, just highlight first line
             print("No timing available, highlighting first line")
             self.highlight_current_line(0)
     
     def highlight_current_line(self, line_index):
-        """Smoothly highlight the current playing line (OPTIMIZED)"""
+        """Smoothly highlight the current playing line"""
         if line_index < 0 or line_index >= len(self.lyric_lines):
             return
         
         if line_index == self.current_line_index:
             return
         
-        print(f"[Optimization] Highlighting line {line_index}: {self.lyric_lines[line_index]['text'][:50]}...")
+        print(f"Highlighting line {line_index}: {self.lyric_lines[line_index]['text'][:50]}...")
         
         old_index = self.current_line_index
         self.current_line_index = line_index
         
-        # Update all lines using optimized system
+        # Update all lines based on their distance from current
         for i, line in enumerate(self.lyric_lines):
             target_opacity = calculate_opacity_for_line(line_index, i, len(self.lyric_lines))
-            is_current = (i == line_index)
+            target_size = FONT_SIZE_CURRENT if i == line_index else FONT_SIZE
             
-            # Use new optimized animation system
-            self._animate_line_optimized(i, target_opacity, is_current)
+            # Animate opacity and size
+            self._animate_line(i, target_opacity, target_size)
         
         # Smooth scroll to keep line centered
-        self.smooth_scroll_to_line_optimized(line_index)
+        self.smooth_scroll_to_line(line_index)
     
     def _animate_line(self, line_index, target_opacity, target_size):
-        """Animate a lyric line to target state (OLD - kept for compatibility)"""
+        """Animate a lyric line to target state"""
         if line_index < 0 or line_index >= len(self.lyric_lines):
             return
         
@@ -852,72 +799,8 @@ class ModernLyricsWindow:
             font=(FONT_FAMILY, target_size, weight)
         )
     
-    def _animate_line_optimized(self, line_index, target_opacity, is_current):
-        """Animate a lyric line using optimized system (NEW)"""
-        if line_index < 0 or line_index >= len(self.lyric_lines):
-            return
-        
-        line = self.lyric_lines[line_index]
-        current_opacity = line.get('opacity', 0.4)
-        
-        # Determine font size based on ANIMATE_FONT_SIZE setting from styles
-        if hasattr(sys.modules['ui.styles'], 'ANIMATE_FONT_SIZE') and not sys.modules['ui.styles'].ANIMATE_FONT_SIZE:
-            # Font size animation disabled for performance
-            target_size = FONT_SIZE_CURRENT if is_current else FONT_SIZE
-            font_size_start = target_size
-        else:
-            # Font size animation enabled
-            font_size_start = FONT_SIZE if not is_current else line.get('font_size', FONT_SIZE)
-            target_size = FONT_SIZE_CURRENT if is_current else FONT_SIZE
-        
-        # Use color cache for faster color calculation
-        def update_line(values):
-            opacity = values['opacity']
-            font_size = values.get('font_size', target_size)
-            
-            line['opacity'] = opacity
-            
-            # Use color cache instead of _opacity_to_color
-            color = self.color_cache.get_color(TEXT_ACTIVE, opacity)
-            
-            # Get canvas ID from virtual scroller
-            if self.virtual_scroller:
-                self.virtual_scroller.update_line_visual(
-                    line_index,
-                    opacity=opacity,
-                    font_size=int(font_size),
-                    color=color,
-                    is_current=is_current
-                )
-            elif line.get('canvas_id'):
-                # Fallback: use canvas batcher
-                weight = "bold" if is_current else "normal"
-                self.canvas_batcher.queue_update(
-                    line['canvas_id'],
-                    fill=color,
-                    font=(FONT_FAMILY, int(font_size), weight)
-                )
-        
-        # Create multi-property animation
-        properties = {
-            'opacity': (current_opacity, target_opacity),
-        }
-        
-        # Add font size animation if enabled
-        if not (hasattr(sys.modules['ui.styles'], 'ANIMATE_FONT_SIZE') and not sys.modules['ui.styles'].ANIMATE_FONT_SIZE):
-            properties['font_size'] = (font_size_start, target_size)
-        
-        anim = MultiPropertyAnimation(
-            duration_ms=ANIMATION_NORMAL,
-            properties=properties,
-            easing_func=Easing.ease_in_out_cubic,
-            on_update=update_line
-        )
-        
-        self.animation_manager.add_animation(f'line_{line_index}', anim)
-    
     def smooth_scroll_to_line(self, line_index):
-        """Smooth scroll to keep line at center (OLD)"""
+        """Smooth scroll to keep line at center"""
         if line_index < 0 or line_index >= len(self.lyric_lines):
             return
         
@@ -939,43 +822,8 @@ class ModernLyricsWindow:
             self.is_scrolling = True
             self._animate_scroll()
     
-    def smooth_scroll_to_line_optimized(self, line_index):
-        """Smooth scroll using optimized animation system (NEW)"""
-        if line_index < 0 or line_index >= len(self.lyric_lines):
-            return
-        
-        if not self.virtual_scroller:
-            # Fallback to old scroll
-            self.smooth_scroll_to_line(line_index)
-            return
-        
-        # Calculate target scroll position using virtual scroller
-        target_offset = self.virtual_scroller.scroll_to_line(line_index, align='center')
-        current_offset = self.virtual_scroller.viewport_y
-        
-        # Use animation manager for smooth scroll
-        def update_scroll(value):
-            self.scroll_offset = value
-            self.virtual_scroller.update_viewport(value)
-            
-            # Update canvas view
-            if self.total_lyrics_height > 0:
-                self.lyrics_canvas.yview_moveto(value / self.total_lyrics_height)
-        
-        from ui.animation_manager import AnimationState
-        
-        scroll_anim = AnimationState(
-            duration_ms=ANIMATION_SMOOTH,
-            start_value=current_offset,
-            end_value=target_offset,
-            easing_func=Easing.ease_in_out_cubic,
-            on_update=update_scroll
-        )
-        
-        self.animation_manager.add_animation('scroll', scroll_anim)
-    
     def _animate_scroll(self):
-        """Smoothly animate scroll position (OLD - kept for fallback)"""
+        """Smoothly animate scroll position"""
         diff = self.target_scroll_offset - self.scroll_offset
         
         if abs(diff) < 1:
@@ -989,10 +837,6 @@ class ModernLyricsWindow:
         # Update canvas scroll
         if self.total_lyrics_height > 0:
             self.lyrics_canvas.yview_moveto(self.scroll_offset / self.total_lyrics_height)
-        
-        # Update virtual scroller if available
-        if self.virtual_scroller:
-            self.virtual_scroller.update_viewport(self.scroll_offset)
         
         # Continue animation
         if self.is_scrolling:
