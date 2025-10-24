@@ -11,7 +11,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from spotify_client import SpotifyClient
 from lyrics_fetcher import GeniusLyricsFetcher
-from lyricstify_fetcher import LyricstifyFetcher
 from ui.styles import (
     BACKGROUND_COLOR, TEXT_COLOR, HIGHLIGHT_COLOR, FONT_FAMILY, FONT_SIZE,
     BUTTON_STYLE, PROGRESS_BAR_STYLE, BUTTON_FONT_SIZE, TITLE_FONT_SIZE,
@@ -206,7 +205,7 @@ class LyricsWindow:
         
         # Hide scrollbar but keep functionality
         scrollbar = self.lyrics_text.yview
-        self.lyrics_text.configure(yscrollcommand=None)
+        self.lyrics_text.configure(yscrollcommand=lambda *args: None)
         self.lyrics_text.yview = scrollbar
         
         # Configure tags for highlighting with glow effect
@@ -535,7 +534,8 @@ class LyricsWindow:
                 
                 # Calculate visible lines in the text widget
                 visible_height = self.lyrics_text.winfo_height()
-                line_height = self.lyrics_text.dlineinfo(line_start)[3] if self.lyrics_text.dlineinfo(line_start) else 20
+                dline_info = self.lyrics_text.dlineinfo(line_start)
+                line_height = dline_info[3] if dline_info else 20
                 visible_lines = visible_height // line_height
                 
                 # Calculate the line to center
@@ -719,7 +719,7 @@ class LyricsWindow:
 
     def on_restore(self, event=None):
         """Handle window restore event."""
-        if str(event.widget) == str(self.root):
+        if event and str(event.widget) == str(self.root):
             self.root.attributes("-topmost", True)
             if self.is_maximized:
                 self.maximize_window()
@@ -745,11 +745,14 @@ class LyricsWindow:
         title = song_info.get('title', '')
         
         # Update song info display
-        self._update_song_info(song_info)
+        self.update_song_info(song_info)
         
         # Fetch and display lyrics
-        lyrics = self.lyrics_fetcher.fetch_lyrics(artist, title)
-        self.update_lyrics(lyrics)
+        if self.lyrics_fetcher:
+            lyrics = self.lyrics_fetcher.fetch_lyrics(artist, title)
+            self.display_lyrics(lyrics)
+        else:
+            self.display_lyrics("Lyrics fetcher not initialized")
 
     def clear_lyrics(self):
         """Clear the lyrics display and reset synchronization."""

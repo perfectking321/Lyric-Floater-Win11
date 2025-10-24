@@ -17,6 +17,9 @@ class LyricstifyFetcher:
             
             lyrics = []
             
+            if process.stdout is None:
+                return []
+            
             for line in process.stdout:
                 clean_line = line.strip()
                 if clean_line:  # Skip empty lines

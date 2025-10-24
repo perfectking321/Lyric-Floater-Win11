@@ -1,6 +1,6 @@
 {
-    "spotify_client_id": "",
-    "spotify_client_secret": "",
-    "spotify_redirect_uri": "",
-    "genius_access_token": ""
+    "spotify_client_id": "912a26cedade4d53bd1b45694dc0a789",
+    "spotify_client_secret": "04f1eee09fa3492dbf8c06c873d6da31",
+    "spotify_redirect_uri": "http://localhost:8888/callback",
+    "genius_access_token": "lk-Q3Yow31iazKO56v69vFX6dcbkgZQNoYzleNJMNo-5RL8KycDqiQTZ72ZKl6SZ"
 } 

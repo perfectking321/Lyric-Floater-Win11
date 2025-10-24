@@ -123,7 +123,7 @@ def main():
         traceback.print_exc()
     finally:
         # Cleanup
-        if 'spotify_controller' in locals():
+        if 'spotify_controller' in locals() and spotify_controller is not None:
             spotify_controller.cleanup()
 
 if __name__ == "__main__":

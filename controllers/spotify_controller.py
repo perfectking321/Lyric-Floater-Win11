@@ -94,7 +94,7 @@ class SpotifyController:
     def test_connection(self):
         """Test the Spotify connection by trying to get the current playback."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 print("Testing Spotify connection...")
                 playback = self.sp.current_playback()
                 if playback:
@@ -120,7 +120,7 @@ class SpotifyController:
     def get_current_track(self):
         """Get the currently playing track."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 playback = self.sp.current_playback()
                 if playback and playback.get('item'):
                     self.current_playback = playback
@@ -136,7 +136,7 @@ class SpotifyController:
     def get_playback_state(self):
         """Get the current playback state."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 return self.sp.current_playback()
         except Exception as e:
             print(f"Error getting playback state: {e}")
@@ -145,7 +145,7 @@ class SpotifyController:
     def start_playback(self):
         """Start or resume playback."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 self.sp.start_playback()
         except Exception as e:
             print(f"Error starting playback: {e}")
@@ -153,7 +153,7 @@ class SpotifyController:
     def pause_playback(self):
         """Pause playback."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 self.sp.pause_playback()
         except Exception as e:
             print(f"Error pausing playback: {e}")
@@ -161,7 +161,7 @@ class SpotifyController:
     def next_track(self):
         """Skip to next track."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 self.sp.next_track()
         except Exception as e:
             print(f"Error skipping to next track: {e}")
@@ -169,7 +169,7 @@ class SpotifyController:
     def previous_track(self):
         """Skip to previous track."""
         try:
-            if self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 self.sp.previous_track()
         except Exception as e:
             print(f"Error skipping to previous track: {e}")
@@ -191,7 +191,7 @@ class SpotifyController:
     def update_progress(self):
         """Update playback progress and notify callbacks."""
         try:
-            if self.sp and self.is_authenticated():
+            if self.is_authenticated() and self.sp is not None:
                 playback = self.sp.current_playback()
                 if playback and playback.get('is_playing'):
                     progress_ms = playback.get('progress_ms', 0)
