@@ -422,10 +422,15 @@ class ModernLyricsWindow:
             self.timed_lyrics = self.spotify_controller.calculate_line_timing(lines, duration_ms)
             print(f"Timing calculated: {len(self.timed_lyrics)} lines")
         
-        # Update lyrics highlighting
+        # Update lyrics highlighting with offset
         if self.timed_lyrics and self.spotify_controller:
+            # Apply timing offset: subtract delay to make lyrics appear later
+            # If offset is +1000ms, lyrics at 10s will highlight at 11s playback
+            from .styles import LYRICS_OFFSET_MS
+            adjusted_progress = progress_ms - LYRICS_OFFSET_MS
+            
             current_index = self.spotify_controller.get_current_line_index(
-                progress_ms, self.timed_lyrics
+                adjusted_progress, self.timed_lyrics
             )
             if current_index != self.current_line_index and current_index >= 0:
                 print(f"Highlighting line {current_index} at {progress_ms}ms")

@@ -48,6 +48,12 @@ OPACITY_FAR = 0.2  # Far away lines
 ANIMATION_FAST = 150  # Button hover
 ANIMATION_NORMAL = 300  # Line transitions
 ANIMATION_SMOOTH = 500  # Auto-scroll
+
+# Lyrics Timing Configuration
+LYRICS_OFFSET_MS = -1500  # Delay by 1000ms (1 second) after singing
+# Positive value = highlight AFTER lyrics are sung
+# Negative value = highlight BEFORE lyrics are sung (read-ahead)
+# Zero = exact timing from LRClib
 ANIMATION_FADE = 400  # Fade in/out
 
 # Layout Dimensions
