@@ -207,8 +207,58 @@ class SpotifyController:
             print(f"Error updating progress: {e}")
         finally:
             # Schedule next update if root exists
+            # IMPROVED: Update every 250ms instead of 1000ms for smoother highlighting
             if self.root:
-                self.update_progress_id = self.root.after(1000, self.update_progress)
+                self.update_progress_id = self.root.after(250, self.update_progress)
+    
+    def calculate_line_timing(self, lyrics_lines, duration_ms):
+        """
+        Distribute lyrics across song duration
+        Returns list of (line_text, start_time_ms, end_time_ms)
+        
+        Args:
+            lyrics_lines: List of lyric line strings
+            duration_ms: Total song duration in milliseconds
+            
+        Returns:
+            List of tuples (line_text, start_ms, end_ms)
+        """
+        if not lyrics_lines or duration_ms <= 0:
+            return []
+        
+        timed_lines = []
+        num_lines = len(lyrics_lines)
+        
+        # Simple even distribution
+        time_per_line = duration_ms / num_lines
+        
+        for i, line in enumerate(lyrics_lines):
+            start_ms = int(i * time_per_line)
+            end_ms = int((i + 1) * time_per_line)
+            timed_lines.append((line, start_ms, end_ms))
+        
+        return timed_lines
+    
+    def get_current_line_index(self, progress_ms, timed_lines):
+        """
+        Get the index of currently playing lyric line
+        
+        Args:
+            progress_ms: Current playback progress in milliseconds
+            timed_lines: List of (line_text, start_ms, end_ms) tuples
+            
+        Returns:
+            Index of current line, or -1 if not found
+        """
+        for i, (line, start_ms, end_ms) in enumerate(timed_lines):
+            if start_ms <= progress_ms < end_ms:
+                return i
+        
+        # Return last line if we're past the end
+        if progress_ms >= timed_lines[-1][2] if timed_lines else 0:
+            return len(timed_lines) - 1
+        
+        return 0
     
     def stop_progress_updates(self):
         """Stop progress updates."""

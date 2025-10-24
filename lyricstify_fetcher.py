@@ -7,7 +7,14 @@ import traceback
 # Add the current directory to the path to ensure modules can be found
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from ui.lyrics_window import LyricsWindow
+# Use new modern UI (set to False to use original)
+USE_MODERN_UI = True
+
+if USE_MODERN_UI:
+    from ui.lyrics_window_v2 import LyricsWindow
+else:
+    from ui.lyrics_window import LyricsWindow
+
 from controllers.spotify_controller import SpotifyController
 from lyrics_fetcher import GeniusLyricsFetcher
 
