@@ -61,6 +61,7 @@ class PygameLyricsWindow:
         self.current_progress_ms = 0
         self.current_duration_ms = 0
         self.timed_lyrics: List[Tuple[str, int, int]] = []
+        self.current_lyric_index = -1  # Track current highlighted line for resize
         
         # Transparency control
         self.window_opacity = 0.95  # 95% opacity (5% transparent)
@@ -312,6 +313,11 @@ class PygameLyricsWindow:
                 if self.timed_lyrics:
                     lines = [item[0] for item in self.timed_lyrics]
                     self.sprite_manager.load_lyrics(lines)
+                    
+                    # Re-set the current line to maintain sync highlighting and centering
+                    if self.current_lyric_index >= 0:
+                        self.sprite_manager.set_current_line(self.current_lyric_index)
+                        print(f"[Window] Restored current line: {self.current_lyric_index}")
                 
                 # Update UI component positions
                 self._reposition_ui_components()
@@ -459,6 +465,7 @@ class PygameLyricsWindow:
                     adjusted_progress, self.timed_lyrics
                 )
                 if current_index >= 0:
+                    self.current_lyric_index = current_index  # Store for resize
                     self.sprite_manager.set_current_line(current_index)
         
         # Check for song change

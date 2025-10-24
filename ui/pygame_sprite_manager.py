@@ -212,15 +212,21 @@ class LyricSpriteManager:
         if not (0 <= index < len(self.lyric_sprites)):
             return
         
-        sprite = self.lyric_sprites[index]
+        # Calculate BASE position of sprite (before scroll offset applied)
+        base_y = self.lyrics_area_y + LYRICS_PADDING + (index * self.line_height)
         
         # Calculate target scroll to center the line
         center_y = self.lyrics_area_y + (self.lyrics_area_height // 2)
-        self.target_scroll_offset = sprite.y - center_y
+        target_scroll = base_y - center_y
         
-        # Clamp scroll offset
-        max_scroll = max(0, len(self.lyric_sprites) * self.line_height - self.lyrics_area_height)
-        self.target_scroll_offset = max(0, min(self.target_scroll_offset, max_scroll))
+        # Calculate scroll bounds
+        # Min scroll: can be negative to center top lines
+        # Max scroll: ensure bottom of content doesn't go above bottom of lyrics area
+        total_content_height = len(self.lyric_sprites) * self.line_height
+        max_scroll = total_content_height - self.lyrics_area_height
+        
+        # Allow negative scroll for centering top lines, but don't scroll past bottom
+        self.target_scroll_offset = min(target_scroll, max_scroll)
     
     def update(self):
         """Update all sprites"""
