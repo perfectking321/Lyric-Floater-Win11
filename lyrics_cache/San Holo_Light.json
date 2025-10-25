@@ -1,20 +1,262 @@
 [
-  {
-    "text": "24 ContributorsLight LyricsI just wanna seeI just wanna see the lightI just wanna seeI just wanna see the lightI just wanna seeI just wanna see the lightI just wanna see the lightEven if it makes me blindI just wanna see the lightBreathe in, leave it all behindI just wanna see the lightEven if it makes me blindI just wanna see the lightBreathe in, leave it all behindI just wanna see the lightI just wanna see the lightI just wanna see the lightI just wanna see the lightI just wanna see the lightLight.. light.. light.. light.. light.. light.. light..I just wanna see the light",
-    "start_time": null,
-    "duration": null,
-    "line_number": 0
-  },
-  {
-    "text": "I just wanna see the lightEven if it makes me blindI just wanna see the lightBreathe in, leave it all behindI just wanna see the lightEven if it makes me blindI just wanna see the lightBreathe in, leave it all behindI just wanna see the lightEven if it makes me blindI just wanna see the lightBreathe in, leave it all behindI just wanna see the lightI just wanna see the lightI just wanna see the lightI just wanna see the lightI just wanna see the lightLight.. light.. light.. light.. light.. light.. light..I just wanna see the light",
-    "start_time": null,
-    "duration": null,
-    "line_number": 1
-  },
-  {
-    "text": "I just wanna see the lightI just wanna seeI just wanna see the lightI just wanna seeI just wanna see the lightI just wanna seeI just wanna see the lightI just wanna see the lightI just wanna see the light..Even if it makes me blind..Even if it makes me blind..",
-    "start_time": null,
-    "duration": null,
-    "line_number": 2
-  }
+  [
+    "I just wanna see",
+    380,
+    1440
+  ],
+  [
+    "I just wanna see the light",
+    1440,
+    3490
+  ],
+  [
+    "I just wanna see",
+    3490,
+    4630
+  ],
+  [
+    "I just wanna see the light",
+    4630,
+    6580
+  ],
+  [
+    "I just wanna see",
+    6580,
+    7810
+  ],
+  [
+    "I just wanna see the light",
+    7810,
+    9760
+  ],
+  [
+    "I just wanna see the light",
+    9760,
+    25750
+  ],
+  [
+    "Even if it makes me blind",
+    25750,
+    28960
+  ],
+  [
+    "I just wanna see the light",
+    28960,
+    32220
+  ],
+  [
+    "Breathe in, leave it all behind",
+    32220,
+    35450
+  ],
+  [
+    "I just wanna see the light",
+    35450,
+    38430
+  ],
+  [
+    "Even if it makes me blind",
+    38430,
+    41620
+  ],
+  [
+    "I just wanna see the light",
+    41620,
+    44940
+  ],
+  [
+    "Breathe in, leave it all behind",
+    44940,
+    48100
+  ],
+  [
+    "I just wanna see the light",
+    48100,
+    64100
+  ],
+  [
+    "I just wanna see the light",
+    64100,
+    65810
+  ],
+  [
+    "I just wanna see the light",
+    65810,
+    67220
+  ],
+  [
+    "I just wanna see the light",
+    67220,
+    68830
+  ],
+  [
+    "I just wanna see the light",
+    68830,
+    70590
+  ],
+  [
+    "Light, light, light, light, light, light, light, light",
+    70590,
+    75480
+  ],
+  [
+    "I just wanna see the light",
+    75480,
+    99570
+  ],
+  [
+    "I just wanna see the light",
+    99570,
+    115450
+  ],
+  [
+    "Even if it makes me blind",
+    115450,
+    118600
+  ],
+  [
+    "I just wanna see the light",
+    118600,
+    121730
+  ],
+  [
+    "Breathe in, leave it all behind",
+    121730,
+    124940
+  ],
+  [
+    "I just wanna see the light",
+    124940,
+    128270
+  ],
+  [
+    "Even if it makes me blind",
+    128270,
+    131290
+  ],
+  [
+    "I just wanna see the light",
+    131290,
+    134580
+  ],
+  [
+    "Breathe in, leave it all behind",
+    134580,
+    137700
+  ],
+  [
+    "I just wanna see the light",
+    137700,
+    141190
+  ],
+  [
+    "Even if it makes me blind",
+    141190,
+    144060
+  ],
+  [
+    "I just wanna see the light",
+    144060,
+    147450
+  ],
+  [
+    "Breathe in, leave it all behind",
+    147450,
+    150690
+  ],
+  [
+    "I just wanna see the light",
+    150690,
+    153990
+  ],
+  [
+    "I just wanna see the light",
+    153990,
+    155330
+  ],
+  [
+    "I just wanna see the light",
+    155330,
+    157000
+  ],
+  [
+    "I just wanna see the light",
+    157000,
+    158460
+  ],
+  [
+    "I just wanna see the light",
+    158460,
+    160190
+  ],
+  [
+    "Light, light, light, light, light, light, light, light",
+    160190,
+    165070
+  ],
+  [
+    "I just wanna see the light",
+    165070,
+    189190
+  ],
+  [
+    "I just wanna see the light",
+    189190,
+    192540
+  ],
+  [
+    "I just wanna see",
+    192540,
+    193600
+  ],
+  [
+    "I just wanna see the light",
+    193600,
+    195410
+  ],
+  [
+    "I just wanna see",
+    195410,
+    196690
+  ],
+  [
+    "I just wanna see the light",
+    196690,
+    198610
+  ],
+  [
+    "I just wanna see",
+    198610,
+    199920
+  ],
+  [
+    "I just wanna see the light",
+    199920,
+    201800
+  ],
+  [
+    "I just wanna see the light",
+    201800,
+    214530
+  ],
+  [
+    "I just wanna see the light",
+    214530,
+    218150
+  ],
+  [
+    "Even if it makes me blind (blind, blind, blind, blind)",
+    218150,
+    224300
+  ],
+  [
+    "Even if it makes me blind",
+    224300,
+    227930
+  ],
+  [
+    "(Blind, blind, blind, blind, blind, blind, blind)",
+    227930,
+    232930
+  ]
 ]
